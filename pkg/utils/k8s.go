@@ -27,6 +27,6 @@ func ErrExit(msg string, err error) {
 	}
 }
 
-func GetNamespacedName(item *unstructured.Unstructured) string {
-	return item.GetNamespace() + "/" + item.GetName()
+func GetNamespacedName(object *unstructured.Unstructured) string {
+	return object.GetNamespace() + "/" + object.GetName()
 }
