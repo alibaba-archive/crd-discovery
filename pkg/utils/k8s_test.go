@@ -17,7 +17,7 @@ func TestGetNamespacedName(t *testing.T) {
 	obj := unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"metadata": map[string]interface{}{
-				"name": name,
+				"name":      name,
 				"namespace": namespace,
 			},
 		},

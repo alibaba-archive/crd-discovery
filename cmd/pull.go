@@ -5,10 +5,10 @@ import (
 )
 
 var cmdPull = &cobra.Command{
-	Use: "pull <kinds...>",
+	Use:   "pull <kinds...>",
 	Short: "manually pull objects",
-	Long: "manually pull objects from master k8s to current k8s",
-	Run: pull,
+	Long:  "manually pull objects from master k8s to current k8s",
+	Run:   pull,
 }
 
 func init() {

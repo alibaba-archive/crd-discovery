@@ -1,0 +1,14 @@
+FROM golang:1.13-rc-alpine3.10 as builder
+WORKDIR /src
+COPY server/ /src/server
+COPY pkg/ /src/pkg
+COPY vendor/ /src/vendor
+COPY go.* /src/
+RUN go build -mod vendor -o /dist/serve github.com/Somefive/crd-discovery/server
+
+FROM alpine:3.10
+WORKDIR /app
+ARG PORT=80
+COPY --from=builder /dist/serve /serve
+ENTRYPOINT /serve --addr=:80
+EXPOSE 80

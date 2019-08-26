@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cn-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cn-syncer
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cn-sync-objs
+subjects:
+  - kind: ServiceAccount
+    name: cn-syncer
+    namespace: cn-system
+roleRef:
+  kind: ClusterRole
+  name: cn-syncer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cn-syncer
+  namespace: cn-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-sync-server
+  namespace: cn-system
+  labels:
+    app: kube-sync-server
+    src: cloudnativeapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-sync-server
+      src: cloudnativeapp
+  template:
+    metadata:
+      labels:
+        app: kube-sync-server
+        src: cloudnativeapp
+    spec:
+      serviceAccountName: cn-syncer
+      containers:
+        - name: kube-sync-server
+          image: somefive/kube-sync-server:0.1.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-sync-server-service
+  namespace: cn-system
+spec:
+  selector:
+    app: kube-sync-server
+    src: cloudnativeapp
+  ports:
+    - protocol: TCP
+      port: 80

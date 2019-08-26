@@ -9,7 +9,7 @@ import (
 
 const (
 	FlagMasterURL = "masterURL"
-	FlagUseHTTPS = "useHTTPS"
+	FlagUseHTTPS  = "useHTTPS"
 )
 
 var masterURL string

@@ -7,9 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic/fake"
 	"net/http"
 	"testing"
 )
@@ -18,31 +15,11 @@ func TestNewSyncerOrDie(t *testing.T) {
 	_ = NewSyncerOrDie(logrus.StandardLogger())
 }
 
-func getFakeSyncer() *Syncer {
-	return &Syncer{
-		Logger:        logrus.StandardLogger(),
-		DynamicClient: fake.NewSimpleDynamicClient(runtime.NewScheme()),
-	}
-}
-
-func getFakeGVR() schema.GroupVersionResource {
-	return schema.GroupVersionResource{
-		Group:    "g",
-		Version:  "v",
-		Resource: "r",
-	}
-}
-
 func TestSyncer_Fetch(t *testing.T) {
-	syncer := getFakeSyncer()
-	gvr := getFakeGVR()
+	syncer := NewFakeSyncer()
+	gvr := NewFakeGVR()
 	name, namespace := "obj-name", "obj-namespace"
-	obj := unstructured.Unstructured{Object: map[string]interface{}{
-		"metadata": map[string]interface{}{
-			"name": name,
-			"namespace": namespace,
-		},
-	}}
+	obj := NewFakeObject(name, namespace)
 	_, err := syncer.DynamicClient.Resource(gvr).Namespace(namespace).Create(&obj, v1.CreateOptions{})
 	require.NoError(t, err)
 	result := syncer.Fetch(gvr)
@@ -53,34 +30,16 @@ func TestSyncer_Fetch(t *testing.T) {
 }
 
 func TestSyncer_Pull(t *testing.T) {
-	syncer := getFakeSyncer()
-	gvr := getFakeGVR()
+	syncer := NewFakeSyncer()
+	gvr := NewFakeGVR()
 	namespace := "obj-namespace"
-	obj0 := unstructured.Unstructured{Object: map[string]interface{}{
-		"kind": "R",
-		"metadata": map[string]interface{}{
-			"name": "obj-name-0",
-			"namespace": namespace,
-		},
-	}}
+	obj0 := NewFakeObject("obj-name-0", namespace)
 	_, err := syncer.DynamicClient.Resource(gvr).Namespace(namespace).Create(&obj0, v1.CreateOptions{})
 	require.NoError(t, err)
-	obj1 := unstructured.Unstructured{Object: map[string]interface{}{
-		"kind": "R",
-		"metadata": map[string]interface{}{
-			"name": "obj-name-1",
-			"namespace": namespace,
-		},
-	}}
+	obj1 := NewFakeObject("obj-name-1", namespace)
 	_, err = syncer.DynamicClient.Resource(gvr).Namespace(namespace).Create(&obj1, v1.CreateOptions{})
 	require.NoError(t, err)
-	obj2 := unstructured.Unstructured{Object: map[string]interface{}{
-		"kind": "R",
-		"metadata": map[string]interface{}{
-			"name": "obj-name-2",
-			"namespace": namespace,
-		},
-	}}
+	obj2 := NewFakeObject("obj-name-2", namespace)
 	bs, err := json.Marshal(&[]unstructured.Unstructured{obj1, obj2})
 	require.NoError(t, err)
 	remoteReader := bytes.NewReader(bs)

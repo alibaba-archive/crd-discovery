@@ -17,7 +17,10 @@ func LoadKubeConfigOrDie() *rest.Config {
 		return config
 	}
 	config, err := clientcmd.BuildConfigFromFlags("", filepath.Join(usr.HomeDir, ".kube", "config"))
-	ErrExit("load local config failed", err)
+	if err != nil {
+		config, err = clientcmd.BuildConfigFromFlags("", "")
+		ErrExit("load local config failed", err)
+	}
 	return config
 }
 

@@ -34,8 +34,8 @@ func (s *Server) push(w http.ResponseWriter, r *http.Request) {
 func (s *Server) extractGVR(r *http.Request) schema.GroupVersionResource {
 	vars := mux.Vars(r)
 	return schema.GroupVersionResource{
-		Group: vars["group"],
-		Version: vars["version"],
+		Group:    vars["group"],
+		Version:  vars["version"],
 		Resource: vars["resource"],
 	}
 }

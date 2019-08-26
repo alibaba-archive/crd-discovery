@@ -13,7 +13,7 @@ func TestReadResponse_200(t *testing.T) {
 	msg := []byte("hello")
 	resp := http.Response{
 		StatusCode: 200,
-		Body: ioutil.NopCloser(bytes.NewReader(msg)),
+		Body:       ioutil.NopCloser(bytes.NewReader(msg)),
 	}
 	data, err := ReadResponse(&resp, nil)
 	require.NoError(t, err)
@@ -24,7 +24,7 @@ func TestReadResponse_500(t *testing.T) {
 	msg := []byte("server failed")
 	resp := http.Response{
 		StatusCode: 500,
-		Body: ioutil.NopCloser(bytes.NewReader(msg)),
+		Body:       ioutil.NopCloser(bytes.NewReader(msg)),
 	}
 	data, err := ReadResponse(&resp, nil)
 	require.EqualError(t, err, string(msg))
@@ -35,7 +35,7 @@ func TestReadResponse_err(t *testing.T) {
 	msg := []byte("nop")
 	resp := http.Response{
 		StatusCode: 200,
-		Body: ioutil.NopCloser(bytes.NewReader(msg)),
+		Body:       ioutil.NopCloser(bytes.NewReader(msg)),
 	}
 	e := errors.New("error happened")
 	data, err := ReadResponse(&resp, e)
