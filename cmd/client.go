@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ func NewClient(logger logrus.FieldLogger) *Client {
 
 func (client *Client) pull(gvr schema.GroupVersionResource) {
 	logger, _ := client.syncer.WithGVR(gvr)
-	url := fmt.Sprintf("%s/sync/pull/%s/%s/%s", masterURL, gvr.Group, gvr.Version, gvr.Resource)
+	url := fmt.Sprintf("%s://%s/sync/pull/%s/%s/%s", getProtocol(), masterURL, gvr.Group, gvr.Version, gvr.Resource)
 	resp, err := http.Get(url)
 	if err != nil {
 		logger.Errorf("get from remote failed: %s\n", err.Error())
@@ -47,7 +47,7 @@ func (client *Client) push(gvr schema.GroupVersionResource) {
 		logger.Errorf("marshal failed: %s\n", err.Error())
 		return
 	}
-	url := fmt.Sprintf("%s/sync/push/%s/%s/%s", masterURL, gvr.Group, gvr.Version, gvr.Resource)
+	url := fmt.Sprintf("%s://%s/sync/push/%s/%s/%s", getProtocol(), masterURL, gvr.Group, gvr.Version, gvr.Resource)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(bs))
 	if err != nil {
 		logger.Error("post to remote failed: %s\n", err.Error())

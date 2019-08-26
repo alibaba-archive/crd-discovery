@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"github.com/Somefive/crd-discovery/pkg/utils"
@@ -36,4 +36,11 @@ func getGVRs(kinds []string) []schema.GroupVersionResource {
 		}
 	}
 	return gvrs
+}
+
+func getProtocol() string {
+	if useHTTPS {
+		return "https"
+	}
+	return "http"
 }

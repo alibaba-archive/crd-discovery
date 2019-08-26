@@ -16,8 +16,9 @@ func main() {
 	router.HandleFunc("/sync/pull/{group}/{version}/{resource}", server.pull)
 	router.HandleFunc("/sync/push/{group}/{version}/{resource}", server.push)
 
-	fmt.Println("start listening")
-	if err := http.ListenAndServe(":8080", router); err != nil {
+	addr := ":8080"
+	fmt.Println("start listening at " + addr)
+	if err := http.ListenAndServe(addr, router); err != nil {
 		fmt.Println(err.Error())
 	}
 }
