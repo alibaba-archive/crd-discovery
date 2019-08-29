@@ -12,8 +12,6 @@ import (
 
 const (
 	FlagAddr       = "addr"
-	FlagEnablePull = "enable-pull"
-	FlagEnablePush = "enable-push"
 )
 
 var rootCmd = &cobra.Command{
@@ -24,18 +22,10 @@ var rootCmd = &cobra.Command{
 }
 
 var addr string
-var enablePull bool
-var enablePush bool
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&addr, FlagAddr, ":8080", "The address web server will listen")
 	viper.BindPFlag(FlagAddr, rootCmd.PersistentFlags().Lookup(FlagAddr))
-
-	rootCmd.PersistentFlags().BoolVar(&enablePull, FlagEnablePull, true, "Enable client pull")
-	viper.BindPFlag(FlagEnablePull, rootCmd.PersistentFlags().Lookup(FlagEnablePull))
-
-	rootCmd.PersistentFlags().BoolVar(&enablePush, FlagEnablePush, true, "Enable client push")
-	viper.BindPFlag(FlagEnablePush, rootCmd.PersistentFlags().Lookup(FlagEnablePush))
 }
 
 func serve(cmd *cobra.Command, args []string) {
@@ -44,15 +34,11 @@ func serve(cmd *cobra.Command, args []string) {
 	server := NewServer(logger)
 
 	router := mux.NewRouter()
-	if enablePull {
-		router.HandleFunc("/sync/pull/{group}/{version}/{resource}", server.pull)
-	}
-	if enablePush {
-		router.HandleFunc("/sync/push/{group}/{version}/{resource}", server.push)
-	}
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("hello\n"))
-	})
+	router.HandleFunc("/list", server.list).Methods(http.MethodGet)
+	router.HandleFunc("/list/{crd}", server.list).Methods(http.MethodGet)
+	router.HandleFunc("/create", server.upsert).Methods(http.MethodPut)
+	router.HandleFunc("/update", server.upsert).Methods(http.MethodPost)
+	router.HandleFunc("/", server.index).Methods(http.MethodGet)
 
 	fmt.Println("start listening at " + addr)
 	if err := http.ListenAndServe(addr, router); err != nil {

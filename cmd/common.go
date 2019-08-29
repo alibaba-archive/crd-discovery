@@ -1,41 +1,51 @@
 package main
 
 import (
-	"github.com/Somefive/crd-discovery/pkg/utils"
-	apixv1beta1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"net/http"
 )
 
-var crdGVR = schema.GroupVersionResource{
-	Group:    "apiextensions.k8s.io",
-	Version:  "v1beta1",
-	Resource: "customresourcedefinitions",
-}
-
-func getGVRs(kinds []string) []schema.GroupVersionResource {
-	config := utils.LoadKubeConfigOrDie()
-	client := apixv1beta1client.NewForConfigOrDie(config)
-	refs, err := client.CustomResourceDefinitions().List(v1.ListOptions{})
-	utils.ErrExit("get crds failed", err)
-	var gvrs []schema.GroupVersionResource
-	for _, item := range refs.Items {
-		selected := len(kinds) == 0
-		for _, kind := range kinds {
-			if kind == item.Spec.Names.Kind {
-				selected = true
-				break
-			}
+func getCRDs(args []string) ([]v1beta1.CustomResourceDefinition, error) {
+	var results []v1beta1.CustomResourceDefinition
+	if len(args) == 0 {
+		url := fmt.Sprintf("%s://%s/list", getProtocol(), masterURL)
+		resp, err := http.Get(url)
+		if err != nil {
+			return nil, err
 		}
-		if selected {
-			gvrs = append(gvrs, schema.GroupVersionResource{
-				Group:    item.Spec.Group,
-				Version:  item.Spec.Versions[0].Name,
-				Resource: item.Spec.Names.Plural,
-			})
+		bs, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		crds := &v1beta1.CustomResourceDefinitionList{}
+		err = json.Unmarshal(bs, crds)
+		if err != nil {
+			return nil, err
+		}
+		results = crds.Items
+	} else {
+		for _, arg := range args {
+			url := fmt.Sprintf("%s://%s/list/%s", getProtocol(), masterURL, arg)
+			resp, err := http.Get(url)
+			if err != nil {
+				return nil, err
+			}
+			bs, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			crd := &v1beta1.CustomResourceDefinition{}
+			err = json.Unmarshal(bs, crd)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, *crd)
 		}
 	}
-	return gvrs
+	return results, nil
 }
 
 func getProtocol() string {

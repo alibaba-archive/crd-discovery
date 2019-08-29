@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
@@ -26,10 +25,7 @@ func LoadKubeConfigOrDie() *rest.Config {
 
 func ErrExit(msg string, err error) {
 	if err != nil {
-		log.Fatalf("%s: %#v", msg, err)
+		log.Fatalf("%s: %s\n", msg, err.Error())
 	}
 }
 
-func GetNamespacedName(object *unstructured.Unstructured) string {
-	return object.GetNamespace() + "/" + object.GetName()
-}

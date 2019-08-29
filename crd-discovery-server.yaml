@@ -6,68 +6,55 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: cn-syncer
+  name: cn-crd-discovery
 rules:
-  - apiGroups: ["*"]
-    resources: ["*"]
-    verbs: ["*"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["get", "list", "create", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: cn-sync-objs
+  name: cn-crd-discovery
 subjects:
   - kind: ServiceAccount
-    name: cn-syncer
+    name: cn-crd-discovery
     namespace: cn-system
 roleRef:
   kind: ClusterRole
-  name: cn-syncer
+  name: cn-crd-discovery
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: cn-syncer
+  name: cn-crd-discovery
   namespace: cn-system
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kube-sync-server
+  name: crd-discovery-server
   namespace: cn-system
   labels:
-    app: kube-sync-server
+    app: crd-discovery-server
     src: cloudnativeapp
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kube-sync-server
+      app: crd-discovery-server
       src: cloudnativeapp
   template:
     metadata:
       labels:
-        app: kube-sync-server
+        app: crd-discovery-server
         src: cloudnativeapp
     spec:
-      serviceAccountName: cn-syncer
+      serviceAccountName: cn-crd-discovery
       containers:
-        - name: kube-sync-server
-          image: somefive/kube-sync-server:0.1.0
+        - name: crd-discovery-server
+          image: somefive/crd-discovery:0.1.0
           imagePullPolicy: Always
           ports:
             - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-sync-server-service
-  namespace: cn-system
-spec:
-  selector:
-    app: kube-sync-server
-    src: cloudnativeapp
-  ports:
-    - protocol: TCP
-      port: 80
